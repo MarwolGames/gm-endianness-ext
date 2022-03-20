@@ -1,5 +1,6 @@
 {
   "resources": [
+    {"id":{"name":"mgEndiannessExtension","path":"scripts/mgEndiannessExtension/mgEndiannessExtension.yy",},"order":2,},
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},"order":1,},
   ],
   "Options": [
