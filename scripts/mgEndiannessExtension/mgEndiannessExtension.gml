@@ -18,7 +18,7 @@
   endianness when processing data. Custom code is therefore injected between the user code and
   the native, built-in, GameMaker code in order to add this functionality. This means that just
   adding this script to a project is enough to start leveraging its extensions, as all relevant
-  built-in functions will seemlessly be replaced by the extended variants.
+  built-in functions will seamlessly be replaced by the extended variants.
 
   The code in this script is structured into the following #regions for easy navigation and
   customizability:
@@ -54,7 +54,7 @@
 #region Configuration
 
 ///
-/// Configuration option that dictates whether the built-in functions should be seemlessly replaced
+/// Configuration option that dictates whether the built-in functions should be seamlessly replaced
 /// by the extended versions or not.
 ///
 /// This configuration option largely affects how these extensions are used. Firstly, it should
@@ -154,7 +154,7 @@
 // of the built-in functions we want to replace. This effectively means that whenever GameMaker  //
 // encounters the built-in function in the code it will replace it according to our macro.       //
 //                                                                                               //
-// This mechanism allows us to seemlessly replace the built-in function by our custom code,      //
+// This mechanism allows us to seamlessly replace the built-in function by our custom code,      //
 // however we still need to be able to execute the built-in functions. Unfortunately, since we   //
 // defined the macros that always replace the built-in functions by our custom ones we cannot    //
 // simply invoke them like we normally would. Luckily, GameMaker uses indexes as an abstraction  //
@@ -205,11 +205,11 @@ enum EndiannessBuiltInOpCodes {
       }
     ");
 */
-#macro buffer_fill  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_fill_ext  : builtin_buffer_fill)
-#macro buffer_peek  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_peek_ext  : builtin_buffer_peek)
-#macro buffer_poke  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_poke_ext  : builtin_buffer_poke)
-#macro buffer_read  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_read_ext  : builtin_buffer_read)
-#macro buffer_write (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_write_ext : builtin_buffer_write)
+#macro buffer_fill  global.__buffer_fill__
+#macro buffer_peek  global.__buffer_peek__
+#macro buffer_poke  global.__buffer_poke__
+#macro buffer_read  global.__buffer_read__
+#macro buffer_write global.__buffer_write__
 
 ///
 /// Executes the built-in buffer_fill function, regardless of whether the built-in function has
@@ -234,7 +234,7 @@ enum EndiannessBuiltInOpCodes {
 /// @param {Integer} size
 ///   The size of the buffer (in bytes) that you wish to fill.
 ///
-#macro builtin_buffer_fill global.__buffer_fill__
+#macro builtin_buffer_fill global.__builtin_buffer_fill__
 builtin_buffer_fill = EndiannessBuiltInOpCodes.BufferFill;
 
 ///
@@ -258,7 +258,7 @@ builtin_buffer_fill = EndiannessBuiltInOpCodes.BufferFill;
 /// @returns {*}
 ///   The value read.
 ///
-#macro builtin_buffer_peek global.__buffer_peek__
+#macro builtin_buffer_peek global.__builtin_buffer_peek__
 builtin_buffer_peek = EndiannessBuiltInOpCodes.BufferPeek;
 
 ///
@@ -282,7 +282,7 @@ builtin_buffer_peek = EndiannessBuiltInOpCodes.BufferPeek;
 /// @param {*} value
 ///   The data to add to the buffer, in accordance with the type specified.
 ///
-#macro builtin_buffer_poke global.__buffer_poke__
+#macro builtin_buffer_poke global.__builtin_buffer_poke__
 builtin_buffer_poke = EndiannessBuiltInOpCodes.BufferPoke;
 
 ///
@@ -304,7 +304,7 @@ builtin_buffer_poke = EndiannessBuiltInOpCodes.BufferPoke;
 /// @returns {*}
 ///   The value read.
 ///
-#macro builtin_buffer_read global.__buffer_read__
+#macro builtin_buffer_read global.__builtin_buffer_read__
 builtin_buffer_read = EndiannessBuiltInOpCodes.BufferRead;
 
 ///
@@ -326,8 +326,23 @@ builtin_buffer_read = EndiannessBuiltInOpCodes.BufferRead;
 /// @param {*} value
 ///   The data to write.
 ///
-#macro builtin_buffer_write global.__buffer_write__
+#macro builtin_buffer_write global.__builtin_buffer_write__
 builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
+
+
+if (ENDIANNESS_CONFIG_REPLACE_BUILTINS) {
+  global.__buffer_fill__  = buffer_fill_ext;
+  global.__buffer_peek__  = buffer_peek_ext;
+  global.__buffer_poke__  = buffer_poke_ext;
+  global.__buffer_read__  = buffer_read_ext;
+  global.__buffer_write__ = buffer_write_ext;
+} else {
+  global.__buffer_fill__  = builtin_buffer_fill;
+  global.__buffer_peek__  = builtin_buffer_peek;
+  global.__buffer_poke__  = builtin_buffer_poke;
+  global.__buffer_read__  = builtin_buffer_read;
+  global.__buffer_write__ = builtin_buffer_write;
+}
 
 #endregion Code Injection
 #region Extension Code
@@ -336,7 +351,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// An unsigned 16-bit integer stored in big-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -347,7 +362,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// An unsigned 16-bit integer stored in little-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -358,7 +373,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// A signed 16-bit integer stored in big-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -369,7 +384,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// A signed 16-bit integer stored in little-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -380,7 +395,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// An unsigned 32-bit integer stored in big-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -391,7 +406,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// An unsigned 32-bit integer stored in little-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -402,7 +417,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// A signed 32-bit integer stored in big-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -413,7 +428,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// A signed 32-bit integer stored in little-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -424,7 +439,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// An unsigned 64-bit integer stored in big-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
@@ -435,7 +450,7 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 ///
 /// An unsigned 64-bit integer stored in little-endian format.
 ///
-/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// If the built-in functions are being replaced by the extended versions then you can seamlessly
 /// use this type with the built-in functions, otherwise this type is only recognized by the
 /// extended versions.
 ///
