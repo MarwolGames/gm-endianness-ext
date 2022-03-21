@@ -102,6 +102,17 @@
 #macro ENDIANNESS_CONFIG_VALIDATE_SWAP true
 
 ///
+/// Configuration option that dictates whether the endianness fixing logic should be validated or
+/// not.
+///
+/// By default this is enabled so that potential errors in the extension code are reported as soon
+/// as possible.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_FIX
+///
+#macro ENDIANNESS_CONFIG_VALIDATE_FIX true
+
+///
 /// Configuration option that dictates whether the extended data types should be validated or not.
 /// This specifically validates that the extended data types decode into the native data types
 /// correctly.
@@ -112,6 +123,27 @@
 /// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_TYPES
 ///
 #macro ENDIANNESS_CONFIG_VALIDATE_TYPES true
+
+///
+/// Configuration option that dictates whether the extension functions should be validated or not.
+///
+/// By default this is enabled so that potential errors in the extension code are reported as soon
+/// as possible.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_EXTENSIONS
+///
+#macro ENDIANNESS_CONFIG_VALIDATE_EXTENSIONS true
+
+///
+/// Configuration option that dictates whether the replacement of the built-in functions should be
+/// validated or not.
+///
+/// By default this is enabled so that potential errors in the extension code are reported as soon
+/// as possible.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_REPLACEMENT
+///
+#macro ENDIANNESS_CONFIG_VALIDATE_REPLACEMENT true
 
 #endregion Configuration
 #region Code Injection
@@ -536,7 +568,7 @@ function buffer_write_ext(buffer, type, value) {
 /// @function fix_endianness
 /// @param {Integer} type
 ///   The data type.
-/// @param {*}
+/// @param {*} value
 ///   The value to fix.
 /// @returns {*}
 ///   The (potentially) fixed value.
@@ -677,5 +709,189 @@ if (ENDIANNESS_CONFIG_VALIDATE_TYPES) {
     throw "buffer_u64be, buffer_u64le: type does not decode correctly";
 }
 
-// TODO: Validate extended functions
+if (ENDIANNESS_CONFIG_VALIDATE_FIX) {
+  if (is_native_little_endian()) {
+    if (fix_endianness(buffer_u16be, 0x1234) != 0x3412)
+      throw "fix_endianness(buffer_u16be): did not swap BE in a LE environment";
+    if (fix_endianness(buffer_u16le, 0x1234) != 0x1234)
+      throw "fix_endianness(buffer_u16le): swapped LE in a LE environment";
+    if (fix_endianness(buffer_s16be, 0x1234) != 0x3412)
+      throw "fix_endianness(buffer_s16be): did not swap BE in a LE environment";
+    if (fix_endianness(buffer_s16le, 0x1234) != 0x1234)
+      throw "fix_endianness(buffer_s16le): swapped LE in a LE environment";
+    if (fix_endianness(buffer_u32be, 0x12345678) != 0x78563412)
+      throw "fix_endianness(buffer_u32be): did not swap BE in a LE environment";
+    if (fix_endianness(buffer_u32le, 0x12345678) != 0x12345678)
+      throw "fix_endianness(buffer_u32le): swapped LE in a LE environment";
+    if (fix_endianness(buffer_s32be, 0x12345678) != 0x78563412)
+      throw "fix_endianness(buffer_s32be): did not swap BE in a LE environment";
+    if (fix_endianness(buffer_s32le, 0x12345678) != 0x12345678)
+      throw "fix_endianness(buffer_s32le): swapped LE in a LE environment";
+    if (fix_endianness(buffer_u64be, 0x123456789abcdef0) != 0xf0debc9a78563412)
+      throw "fix_endianness(buffer_u64be): did not swap BE in a LE environment";
+    if (fix_endianness(buffer_u64le, 0x123456789abcdef0) != 0x123456789abcdef0)
+      throw "fix_endianness(buffer_u64le): swapped LE in a LE environment";
+  } else {
+    if (fix_endianness(buffer_u16be, 0x1234) != 0x1234)
+      throw "fix_endianness(buffer_u16be): swapped BE in a BE environment";
+    if (fix_endianness(buffer_u16le, 0x1234) != 0x3412)
+      throw "fix_endianness(buffer_u16le): did not swap LE in a BE environment";
+    if (fix_endianness(buffer_s16be, 0x1234) != 0x1234)
+      throw "fix_endianness(buffer_s16be): swapped BE in a BE environment";
+    if (fix_endianness(buffer_s16le, 0x1234) != 0x3412)
+      throw "fix_endianness(buffer_s16le): did not swap LE in a BE environment";
+    if (fix_endianness(buffer_u32be, 0x12345678) != 0x12345678)
+      throw "fix_endianness(buffer_u32be): swapped BE in a BE environment";
+    if (fix_endianness(buffer_u32le, 0x12345678) != 0x78563412)
+      throw "fix_endianness(buffer_u32le): did not swap LE in a BE environment";
+    if (fix_endianness(buffer_s32be, 0x12345678) != 0x12345678)
+      throw "fix_endianness(buffer_s32be): swapped BE in a BE environment";
+    if (fix_endianness(buffer_s32le, 0x12345678) != 0x78563412)
+      throw "fix_endianness(buffer_s32le): did not swap LE in a BE environment";
+    if (fix_endianness(buffer_u64be, 0x123456789abcdef0) != 0x123456789abcdef0)
+      throw "fix_endianness(buffer_u64be): swapped BE in a BE environment";
+    if (fix_endianness(buffer_u64le, 0x123456789abcdef0) != 0xf0debc9a78563412)
+      throw "fix_endianness(buffer_u64le): did not swap LE in a BE environment";
+  }
+  if (fix_endianness(buffer_u8, 0x12) != 0x12)
+    throw "fix_endianness(buffer_u8): swapped native type";
+  if (fix_endianness(buffer_s8, 0x12) != 0x12)
+    throw "fix_endianness(buffer_s8): swapped native type";
+  if (fix_endianness(buffer_u16, 0x1234) != 0x1234)
+    throw "fix_endianness(buffer_u16): swapped native type";
+  if (fix_endianness(buffer_s16, 0x1234) != 0x1234)
+    throw "fix_endianness(buffer_s16): swapped native type";
+  if (fix_endianness(buffer_u32, 0x12345678) != 0x12345678)
+    throw "fix_endianness(buffer_u32): swapped native type";
+  if (fix_endianness(buffer_s32, 0x12345678) != 0x12345678)
+    throw "fix_endianness(buffer_s32): swapped native type";
+  if (fix_endianness(buffer_u64, 0x123456789abcdef0) != 0x123456789abcdef0)
+    throw "fix_endianness(buffer_u64): swapped native type";
+  if (fix_endianness(buffer_f16, 1.234) != 1.234)
+    throw "fix_endianness(buffer_f16): swapped native type";
+  if (fix_endianness(buffer_f32, 1.234) != 1.234)
+    throw "fix_endianness(buffer_f32): swapped native type";
+  if (fix_endianness(buffer_f64, 1.234) != 1.234)
+    throw "fix_endianness(buffer_f64): swapped native type";
+  if (fix_endianness(buffer_bool, true) != true)
+    throw "fix_endianness(buffer_bool): swapped native type";
+  if (fix_endianness(buffer_string, "Hello") != "Hello")
+    throw "fix_endianness(buffer_string): swapped native type";
+  if (fix_endianness(buffer_text, "Hello") != "Hello")
+    throw "fix_endianness(buffer_text): swapped native type";
+}
+
+if (ENDIANNESS_CONFIG_VALIDATE_EXTENSIONS) {
+  var actual, bytes, buffer = buffer_create(8, buffer_fixed, 1);
+  try {
+    buffer_fill_ext(buffer, 0, buffer_u32be, 0x11223344, 8);
+    bytes = [ 0x11, 0x22, 0x33, 0x44, 0x11, 0x22, 0x33, 0x44 ];
+    for (var i = 0; i < 8; i++) {
+      actual = builtin_buffer_peek(buffer, i, buffer_u8);
+      if (actual != bytes[i]) {
+        throw "buffer_fill_ext(be): did not fill the buffer correctly, expected byte " + string(i)
+            + " to be " + string(bytes[i]) + " but was " + string(actual);
+      }
+    }
+
+    buffer_fill_ext(buffer, 0, buffer_u32le, 0x11223344, 8);
+    bytes = [ 0x44, 0x33, 0x22, 0x11, 0x44, 0x33, 0x22, 0x11 ];
+    for (var i = 0; i < 8; i++) {
+      actual = builtin_buffer_peek(buffer, i, buffer_u8);
+      if (actual != bytes[i]) {
+        throw "buffer_fill_ext(le): did not fill the buffer correctly, expected byte " + string(i)
+            + " to be " + string(bytes[i]) + " but was " + string(actual);
+      }
+    }
+
+    actual = buffer_peek_ext(buffer, 2, buffer_u32be);
+    if (actual != 0x22114433)
+      throw "buffer_peek_ext(be): did not peek the buffer correctly (" + string(actual) + ")";
+
+    actual = buffer_peek_ext(buffer, 2, buffer_u32le);
+    if (actual != 0x33441122)
+      throw "buffer_peek_ext(le): did not peek the buffer correctly (" + string(actual) + ")";
+
+    buffer_poke_ext(buffer, 2, buffer_u32be, 0xaabbccdd);
+    bytes = [ 0x44, 0x33, 0xaa, 0xbb, 0xcc, 0xdd, 0x22, 0x11 ];
+    for (var i = 0; i < 8; i++) {
+      actual = builtin_buffer_peek(buffer, i, buffer_u8);
+      if (actual != bytes[i]) {
+        throw "buffer_poke_ext(be): did not poke the buffer correctly, expected byte " + string(i)
+            + " to be " + string(bytes[i]) + " but was " + string(actual);
+      }
+    }
+
+    buffer_poke_ext(buffer, 2, buffer_u32le, 0xaabbccdd);
+    bytes = [ 0x44, 0x33, 0xdd, 0xcc, 0xbb, 0xaa, 0x22, 0x11 ];
+    for (var i = 0; i < 8; i++) {
+      actual = builtin_buffer_peek(buffer, i, buffer_u8);
+      if (actual != bytes[i]) {
+        throw "buffer_poke_ext(le): did not poke the buffer correctly, expected byte " + string(i)
+            + " to be " + string(bytes[i]) + " but was " + string(actual);
+      }
+    }
+
+    buffer_seek(buffer, buffer_seek_start, 0);
+    buffer_write_ext(buffer, buffer_u64be, 0x1122334455667788);
+    bytes = [ 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 ];
+    for (var i = 0; i < 8; i++) {
+      actual = builtin_buffer_peek(buffer, i, buffer_u8);
+      if (actual != bytes[i]) {
+        throw "buffer_write_ext(be): did not write the buffer correctly, expected byte "
+            + string(i) + " to be " + string(bytes[i]) + " but was " + string(actual);
+      }
+    }
+
+    buffer_seek(buffer, buffer_seek_start, 0);
+    buffer_write_ext(buffer, buffer_u64le, 0x1122334455667788);
+    bytes = [ 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11 ];
+    for (var i = 0; i < 8; i++) {
+      actual = builtin_buffer_peek(buffer, i, buffer_u8);
+      if (actual != bytes[i]) {
+        throw "buffer_write_ext(le): did not write the buffer correctly, expected byte "
+            + string(i) + " to be " + string(bytes[i]) + " but was " + string(actual);
+      }
+    }
+
+    buffer_seek(buffer, buffer_seek_start, 0);
+    actual = buffer_read_ext(buffer, buffer_u64be);
+    if (actual != 0x8877665544332211)
+      throw "buffer_read_ext(be): did not read the buffer correctly (" + string(actual) + ")";
+
+    buffer_seek(buffer, buffer_seek_start, 0);
+    actual = buffer_read_ext(buffer, buffer_u64le);
+    if (actual != 0x1122334455667788)
+      throw "buffer_read_ext(le): did not read the buffer correctly (" + string(actual) + ")";
+  } finally {
+    buffer_delete(buffer);
+  }
+}
+
+if (ENDIANNESS_CONFIG_VALIDATE_REPLACEMENT) {
+  if (ENDIANNESS_CONFIG_REPLACE_BUILTINS) {
+    if (buffer_fill != buffer_fill_ext)
+      throw "buffer_fill was not correctly replaced";
+    if (buffer_peek != buffer_peek_ext)
+      throw "buffer_peek was not correctly replaced";
+    if (buffer_poke != buffer_poke_ext)
+      throw "buffer_poke was not correctly replaced";
+    if (buffer_read != buffer_read_ext)
+      throw "buffer_read was not correctly replaced";
+    if (buffer_write != buffer_write_ext)
+      throw "buffer_write was not correctly replaced";
+  } else {
+    if (buffer_fill != EndiannessBuiltInOpCodes.BufferFill)
+      throw "buffer_fill is not the built-in";
+    if (buffer_peek != EndiannessBuiltInOpCodes.BufferPeek)
+      throw "buffer_peek is not the built-in";
+    if (buffer_poke != EndiannessBuiltInOpCodes.BufferPoke)
+      throw "buffer_poke is not the built-in";
+    if (buffer_read != EndiannessBuiltInOpCodes.BufferRead)
+      throw "buffer_read is not the built-in";
+    if (buffer_write != EndiannessBuiltInOpCodes.BufferWrite)
+      throw "buffer_write is not the built-in";
+  }
+}
+
 #endregion Validation
