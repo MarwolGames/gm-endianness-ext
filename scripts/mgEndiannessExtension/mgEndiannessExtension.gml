@@ -44,14 +44,96 @@
 **************************************************************************************************/
 
 #region Configuration
-// TODO: To be implemented
+
+///
+/// Configuration option that dictates whether the built-in functions should be seemlessly replaced
+/// by the extended versions or not.
+///
+/// This configuration option largely affects how these extensions are used. Firstly, it should
+/// always be set to a boolean expression that can be evaluated at compile time (e.g. using true or
+/// false directly). Secondly, if this configuration option evaluates to true then using the
+/// built-in functions or the extended functions directly will yield the same result (as one is
+/// replaced by the other). However, if this configuration option evaluates to false then the
+/// extended functions must be used directly as the built-in functions are not replaced.
+///
+/// The intended way these extensions are meant to be used is by replacing the built-in functions
+/// with the extended versions (meaning this configuration option should evaluate to true).
+/// However, there might be scenarios in which it isn't performant to replace every invocation of
+/// the built-in functions by the extended versions. In those cases this configuration option
+/// should be set to false and the extended functions should be used directly in the places in
+/// which they are needed.
+///
+/// This distinction is left to the user as we cannot know which case applies, but we default to
+/// enabling the replacement of the built-in functions as it provides the best integration of the
+/// endianness extensions.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_REPLACE_BUILTINS
+///
+#macro ENDIANNESS_CONFIG_REPLACE_BUILTINS true
+
+///
+/// Configuration option that dictates whether the op codes for the built-in functions should be
+/// validated or not (i.e validate that the EndiannessBuiltInOpCodes enum has the correct values).
+///
+/// Note that this configuration option is only relevant if the built-in functions are not being
+/// replaced. This comes from the fact that we cannot retrieve the correct op code for the built-in
+/// functions when they are replaced, so even if we could validate the correctness of the
+/// configured op codes indirectly (e.g. by running the functions and validating their side
+/// effects) we still wouldn't be able to tell the user what the correct op codes were.
+///
+/// By default this is enabled so that potential errors in the extension code are reported as soon
+/// as possible.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_OPCODES
+///
+#macro ENDIANNESS_CONFIG_VALIDATE_OPCODES true
+
 #endregion Configuration
 #region Code Injection
-// TODO: To be implemented
+// TODO: Section comment
+
+///
+/// Enumeration of the different op codes for the replaced built-in functions.
+///
+enum EndiannessBuiltInOpCodes {
+  BufferFill  = 1508,
+  BufferPeek  = 1492,
+  BufferPoke  = 1491,
+  BufferRead  = 1490,
+  BufferWrite = 1489,
+}
+
+// TODO: code injection
 #endregion Code Injection
 #region Extension Code
 // TODO: To be implemented
 #endregion Extension Code
 #region Validation
-// TODO: To be implemented
+
+if (!ENDIANNESS_CONFIG_REPLACE_BUILTINS) {
+
+  if (ENDIANNESS_CONFIG_VALIDATE_OPCODES) {
+    var opcodes_are_correct = true;
+    opcodes_are_correct &= buffer_fill  == EndiannessBuiltInOpCodes.BufferFill;
+    opcodes_are_correct &= buffer_peek  == EndiannessBuiltInOpCodes.BufferPeek;
+    opcodes_are_correct &= buffer_poke  == EndiannessBuiltInOpCodes.BufferPoke;
+    opcodes_are_correct &= buffer_read  == EndiannessBuiltInOpCodes.BufferRead;
+    opcodes_are_correct &= buffer_write == EndiannessBuiltInOpCodes.BufferWrite;
+    if (!opcodes_are_correct) {
+      var opcodes = @"
+        enum EndiannessBuiltInOpCodes {
+          BufferFill  = " + string(buffer_fill)  + @",
+          BufferPeek  = " + string(buffer_peek)  + @",
+          BufferPoke  = " + string(buffer_poke)  + @",
+          BufferRead  = " + string(buffer_read)  + @",
+          BufferWrite = " + string(buffer_write) + @",
+        }
+      ";
+      throw "One of more op codes in EndiannessBuiltInOpCodes are incorrect.\n"
+          + "Please update the enum with the following:\n" + opcodes;
+    }
+  }
+
+}
+
 #endregion Validation
