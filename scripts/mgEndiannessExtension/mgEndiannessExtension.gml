@@ -82,6 +82,17 @@
 ///
 #macro ENDIANNESS_CONFIG_VALIDATE_OPCODES true
 
+///
+/// Configuration option that dictates whether the endianness swapping functions should be
+/// validated or not.
+///
+/// By default this is enabled so that potential errors in the extension code are reported as soon
+/// as possible.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_SWAP
+///
+#macro ENDIANNESS_CONFIG_VALIDATE_SWAP true
+
 #endregion Configuration
 #region Code Injection
 // TODO: Section comment
@@ -246,7 +257,57 @@ builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 
 #endregion Code Injection
 #region Extension Code
-// TODO: To be implemented
+
+///
+/// Swaps the endianness of a 16-bit integer.
+///
+/// @function swap_endianness_16
+/// @param {Integer} value
+///   The integer to swap endianness.
+/// @returns {Integer}
+///   The supplied integer in the reverse endianness.
+///
+function swap_endianness_16(value) {
+  return ((value << 8) & 0xff00)
+       | ((value >> 8) & 0x00ff);
+}
+
+///
+/// Swaps the endianness of a 32-bit integer.
+///
+/// @function swap_endianness_32
+/// @param {Integer} value
+///   The integer to swap endianness.
+/// @returns {Integer}
+///   The supplied integer in the reverse endianness.
+///
+function swap_endianness_32(value) {
+  return ((value << 24) & 0xff000000)
+       | ((value >> 24) & 0x000000ff)
+       | ((value <<  8) & 0x00ff0000)
+       | ((value >>  8) & 0x0000ff00);
+}
+
+///
+/// Swaps the endianness of a 64-bit integer.
+///
+/// @function swap_endianness_64
+/// @param {Integer} value
+///   The integer to swap endianness.
+/// @returns {Integer}
+///   The supplied integer in the reverse endianness.
+///
+function swap_endianness_64(value) {
+  return ((value << 56) & 0xff00000000000000)
+       | ((value >> 56) & 0x00000000000000ff)
+       | ((value << 40) & 0x00ff000000000000)
+       | ((value >> 40) & 0x000000000000ff00)
+       | ((value << 24) & 0x0000ff0000000000)
+       | ((value >> 24) & 0x0000000000ff0000)
+       | ((value <<  8) & 0x000000ff00000000)
+       | ((value >>  8) & 0x00000000ff000000);
+}
+
 #endregion Extension Code
 #region Validation
 
@@ -282,6 +343,15 @@ if (ENDIANNESS_CONFIG_VALIDATE_OPCODES) {
     buffer_delete(buffer);
   }
   show_debug_message("EndiannessBuiltInOpCodes: opcodes are correct");
+}
+
+if (ENDIANNESS_CONFIG_VALIDATE_SWAP) {
+  if (swap_endianness_16(0xffee) != 0xeeff)
+    throw "swap_endianness_16: did not swap endianness correctly";
+  if (swap_endianness_32(0xffeeddcc) != 0xccddeeff)
+    throw "swap_endianness_32: did not swap endianness correctly";
+  if (swap_endianness_64(0xffeeddccbbaa9988) != 0x8899aabbccddeeff)
+    throw "swap_endianness_64: did not swap endianness correctly";
 }
 
 #endregion Validation
