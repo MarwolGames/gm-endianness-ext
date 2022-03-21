@@ -93,6 +93,18 @@
 ///
 #macro ENDIANNESS_CONFIG_VALIDATE_SWAP true
 
+///
+/// Configuration option that dictates whether the extended data types should be validated or not.
+/// This specifically validates that the extended data types decode into the native data types
+/// correctly.
+///
+/// By default this is enabled so that potential errors in the extension code are reported as soon
+/// as possible.
+///
+/// @constant {Bool} ENDIANNESS_CONFIG_VALIDATE_TYPES
+///
+#macro ENDIANNESS_CONFIG_VALIDATE_TYPES true
+
 #endregion Configuration
 #region Code Injection
 // TODO: Section comment
@@ -135,9 +147,7 @@ enum EndiannessBuiltInOpCodes {
 ///       that is being used as a function invocation then it will coerce the integer to a function
 ///       (interpreting the integer as the function/script/method index). However, if we tried to
 ///       invoke the integer as a function directly then we'd get a runtime exception as the
-///       integer would not go through the coercion process. Therefore we use a globalvar
-///       declaration instead of a #macro declaration since both create the same identifier but the
-///       former allows us to actually invoke the built-in function.
+///       integer would not go through the coercion process.
 ///
 /// @function builtin_buffer_fill
 /// @param {Buffer} buffer
@@ -152,7 +162,7 @@ enum EndiannessBuiltInOpCodes {
 /// @param {Integer} size
 ///   The size of the buffer (in bytes) that you wish to fill.
 ///
-globalvar builtin_buffer_fill;
+#macro builtin_buffer_fill global.__buffer_fill__
 builtin_buffer_fill = EndiannessBuiltInOpCodes.BufferFill;
 
 ///
@@ -163,9 +173,7 @@ builtin_buffer_fill = EndiannessBuiltInOpCodes.BufferFill;
 ///       that is being used as a function invocation then it will coerce the integer to a function
 ///       (interpreting the integer as the function/script/method index). However, if we tried to
 ///       invoke the integer as a function directly then we'd get a runtime exception as the
-///       integer would not go through the coercion process. Therefore we use a globalvar
-///       declaration instead of a #macro declaration since both create the same identifier but the
-///       former allows us to actually invoke the built-in function.
+///       integer would not go through the coercion process.
 ///
 /// @function builtin_buffer_peek
 /// @param {Buffer} buffer
@@ -178,7 +186,7 @@ builtin_buffer_fill = EndiannessBuiltInOpCodes.BufferFill;
 /// @returns {*}
 ///   The value read.
 ///
-globalvar builtin_buffer_peek;
+#macro builtin_buffer_peek global.__buffer_peek__
 builtin_buffer_peek = EndiannessBuiltInOpCodes.BufferPeek;
 
 ///
@@ -189,9 +197,7 @@ builtin_buffer_peek = EndiannessBuiltInOpCodes.BufferPeek;
 ///       that is being used as a function invocation then it will coerce the integer to a function
 ///       (interpreting the integer as the function/script/method index). However, if we tried to
 ///       invoke the integer as a function directly then we'd get a runtime exception as the
-///       integer would not go through the coercion process. Therefore we use a globalvar
-///       declaration instead of a #macro declaration since both create the same identifier but the
-///       former allows us to actually invoke the built-in function.
+///       integer would not go through the coercion process.
 ///
 /// @function builtin_buffer_poke
 /// @param {Buffer} buffer
@@ -204,7 +210,7 @@ builtin_buffer_peek = EndiannessBuiltInOpCodes.BufferPeek;
 /// @param {*} value
 ///   The data to add to the buffer, in accordance with the type specified.
 ///
-globalvar builtin_buffer_poke;
+#macro builtin_buffer_poke global.__buffer_poke__
 builtin_buffer_poke = EndiannessBuiltInOpCodes.BufferPoke;
 
 ///
@@ -215,9 +221,7 @@ builtin_buffer_poke = EndiannessBuiltInOpCodes.BufferPoke;
 ///       that is being used as a function invocation then it will coerce the integer to a function
 ///       (interpreting the integer as the function/script/method index). However, if we tried to
 ///       invoke the integer as a function directly then we'd get a runtime exception as the
-///       integer would not go through the coercion process. Therefore we use a globalvar
-///       declaration instead of a #macro declaration since both create the same identifier but the
-///       former allows us to actually invoke the built-in function.
+///       integer would not go through the coercion process.
 ///
 /// @function builtin_buffer_read
 /// @param {Buffer} buffer
@@ -228,7 +232,7 @@ builtin_buffer_poke = EndiannessBuiltInOpCodes.BufferPoke;
 /// @returns {*}
 ///   The value read.
 ///
-globalvar builtin_buffer_read;
+#macro builtin_buffer_read global.__buffer_read__
 builtin_buffer_read = EndiannessBuiltInOpCodes.BufferRead;
 
 ///
@@ -239,9 +243,7 @@ builtin_buffer_read = EndiannessBuiltInOpCodes.BufferRead;
 ///       that is being used as a function invocation then it will coerce the integer to a function
 ///       (interpreting the integer as the function/script/method index). However, if we tried to
 ///       invoke the integer as a function directly then we'd get a runtime exception as the
-///       integer would not go through the coercion process. Therefore we use a globalvar
-///       declaration instead of a #macro declaration since both create the same identifier but the
-///       former allows us to actually invoke the built-in function.
+///       integer would not go through the coercion process.
 ///
 /// @function builtin_buffer_write
 /// @param {Buffer} buffer
@@ -252,11 +254,280 @@ builtin_buffer_read = EndiannessBuiltInOpCodes.BufferRead;
 /// @param {*} value
 ///   The data to write.
 ///
-globalvar builtin_buffer_write;
+#macro builtin_buffer_write global.__buffer_write__
 builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
 
 #endregion Code Injection
 #region Extension Code
+// TODO: Handle floating point endianness
+
+///
+/// An unsigned 16-bit integer stored in big-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_u16be
+///
+#macro buffer_u16be (0x8b160000 | buffer_u16)
+
+///
+/// An unsigned 16-bit integer stored in little-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_u16le
+///
+#macro buffer_u16le (0x81160000 | buffer_u16)
+
+///
+/// A signed 16-bit integer stored in big-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_s16be
+///
+#macro buffer_s16be (0x1b160000 | buffer_s16)
+
+///
+/// A signed 16-bit integer stored in little-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_s16le
+///
+#macro buffer_s16le (0x11160000 | buffer_s16)
+
+///
+/// An unsigned 32-bit integer stored in big-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_u32be
+///
+#macro buffer_u32be (0x8b320000 | buffer_u32)
+
+///
+/// An unsigned 32-bit integer stored in little-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_u32le
+///
+#macro buffer_u32le (0x81320000 | buffer_u32)
+
+///
+/// A signed 32-bit integer stored in big-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_s32be
+///
+#macro buffer_s32be (0x1b320000 | buffer_s32)
+
+///
+/// A signed 32-bit integer stored in little-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_s32le
+///
+#macro buffer_s32le (0x11320000 | buffer_s32)
+
+///
+/// An unsigned 64-bit integer stored in big-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_u64be
+///
+#macro buffer_u64be (0x8b640000 | buffer_u64)
+
+///
+/// An unsigned 64-bit integer stored in little-endian format.
+///
+/// If the built-in functions are being replaced by the extended versions then you can seemlessly
+/// use this type with the built-in functions, otherwise this type is only recognized by the
+/// extended versions.
+///
+/// @constant {Integer} buffer_u64le
+///
+#macro buffer_u64le (0x81640000 | buffer_u64)
+
+
+///
+/// Checks if the current platform performs the native operations in little-endian format.
+///
+/// @function is_native_little_endian
+/// @returns {Bool}
+///   True if the native operations are performed in little-endian format or false otherwise.
+///
+function is_native_little_endian() {
+  static memoized_value = (function() {
+    var buffer = buffer_create(2, buffer_fixed, 1);
+    try {
+      builtin_buffer_write(buffer, buffer_u16, 0x0005);
+
+      var first_byte = builtin_buffer_peek(buffer, 0, buffer_u8);
+      return first_byte == 0x05;
+    } finally {
+      buffer_delete(buffer);
+    }
+  })();
+  return memoized_value;
+};
+
+///
+/// Fills a previously created buffer with a given data type and value, allowing for the usage of
+/// endianness-aware versions of the data types.
+///
+/// @function buffer_fill_ext
+/// @param {Buffer} buffer
+///   The index of the buffer to fill.
+/// @param {Integer} offset
+///   The data offset value (in bytes).
+/// @param {Integer} type
+///   The type of data that is to be written to the buffer.
+/// @param {*} value
+///   The data to write.
+/// @param {Integer} size
+///   The size of the buffer (in bytes) that you wish to fill.
+///
+function buffer_fill_ext(buffer, offset, type, value, size) {
+  return builtin_buffer_fill(buffer, offset, type & 0xffff, fix_endianness(type, value), size);
+}
+
+///
+/// Reads a piece of data from the given buffer without modifying the current seek position,
+/// allowing for the usage of endianness-aware versions of the data types.
+///
+/// @function buffer_peek_ext
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} offset
+///   The offset position (in bytes) within the buffer to read the given data from.
+/// @param {Integer} type
+///   The type of data that is to be read from the buffer.
+/// @returns {*}
+///   The value read.
+///
+function buffer_peek_ext(buffer, offset, type) {
+  return fix_endianness(type, builtin_buffer_peek(buffer, offset, type & 0xffff));
+}
+
+///
+/// Writes a piece of data to the given buffer without modifying the current seek position,
+/// allowing for the usage of endianness-aware versions of the data types.
+///
+/// @function buffer_poke_ext
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} offset
+///   The offset position (in bytes) within the buffer to write the given data to.
+/// @param {Integer} type
+///   The type of data that is to be written to the buffer.
+/// @param {*} value
+///   The data to add to the buffer, in accordance with the type specified.
+///
+function buffer_poke_ext(buffer, offset, type, value) {
+  return builtin_buffer_poke(buffer, offset, type & 0xffff, fix_endianness(type, value));
+}
+
+///
+/// Reads a piece of data from the given buffer, allowing for the usage of endianness-aware
+/// versions of the data types.
+///
+/// @function buffer_read_ext
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} type
+///   The type of data that is to be read from the buffer.
+/// @returns {*}
+///   The value read.
+///
+function buffer_read_ext(buffer, type) {
+  return fix_endianness(type, builtin_buffer_read(buffer, type & 0xffff));
+}
+
+///
+/// Executes the built-in buffer_write function, regardless of whether the built-in function has
+/// been replaced by the extended version or not.
+///
+/// Note: this needs to be stored in a variable. If GameMaker encounters a variable with an integer
+///       that is being used as a function invocation then it will coerce the integer to a function
+///       (interpreting the integer as the function/script/method index). However, if we tried to
+///       invoke the integer as a function directly then we'd get a runtime exception as the
+///       integer would not go through the coercion process.
+///
+/// @function buffer_write_ext
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} type
+///   The type of data that is to be written to the buffer (note: cannot be one of the extended
+///   types).
+/// @param {*} value
+///   The data to write.
+///
+function buffer_write_ext(buffer, type, value) {
+  return builtin_buffer_write(buffer, type & 0xffff, fix_endianness(type, value));
+}
+
+///
+/// Returns the supplied value with any endianness fixes applied in order for the native endianness
+/// to produce the desired endianness, even if differing.
+///
+/// @function fix_endianness
+/// @param {Integer} type
+///   The data type.
+/// @param {*}
+///   The value to fix.
+/// @returns {*}
+///   The (potentially) fixed value.
+///
+function fix_endianness(type, value) {
+  if (is_native_little_endian()) {
+    switch (type) {
+      case buffer_u16be:
+      case buffer_s16be:
+        return swap_endianness_16(value);
+      case buffer_u32be:
+      case buffer_s32be:
+        return swap_endianness_32(value);
+      case buffer_u64be:
+        return swap_endianness_64(value);
+    }
+  } else {
+    switch (type) {
+      case buffer_u16le:
+      case buffer_s16le:
+        return swap_endianness_16(value);
+      case buffer_u32le:
+      case buffer_s32le:
+        return swap_endianness_32(value);
+      case buffer_u64le:
+        return swap_endianness_64(value);
+    }
+  }
+  return value;
+}
+
 
 ///
 /// Swaps the endianness of a 16-bit integer.
@@ -342,7 +613,6 @@ if (ENDIANNESS_CONFIG_VALIDATE_OPCODES) {
   } finally {
     buffer_delete(buffer);
   }
-  show_debug_message("EndiannessBuiltInOpCodes: opcodes are correct");
 }
 
 if (ENDIANNESS_CONFIG_VALIDATE_SWAP) {
@@ -354,4 +624,18 @@ if (ENDIANNESS_CONFIG_VALIDATE_SWAP) {
     throw "swap_endianness_64: did not swap endianness correctly";
 }
 
+if (ENDIANNESS_CONFIG_VALIDATE_TYPES) {
+  if ((buffer_u16 & 0xffff) != buffer_u16)
+    throw "buffer_u16be, buffer_u16le: type does not decode correctly";
+  if ((buffer_s16 & 0xffff) != buffer_s16)
+    throw "buffer_s16be, buffer_s16le: type does not decode correctly";
+  if ((buffer_u32 & 0xffff) != buffer_u32)
+    throw "buffer_u32be, buffer_u32le: type does not decode correctly";
+  if ((buffer_s32 & 0xffff) != buffer_s32)
+    throw "buffer_s32be, buffer_s32le: type does not decode correctly";
+  if ((buffer_u64 & 0xffff) != buffer_u64)
+    throw "buffer_u64be, buffer_u64le: type does not decode correctly";
+}
+
+// TODO: Validate extended functions
 #endregion Validation
