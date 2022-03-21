@@ -24,17 +24,17 @@
   customizability:
 
     - Configuration: a set of macros that drive the behaviour of these code extensions. These
-      macros are meant to be overridden by the user on a configuration-specific basis in order to
-      configure the behaviour based on different targets, build types, etc. Due to this, the
-      default values attempt to provide the most developer-centric experience.
+      macros are meant to be overridden by the user on a configuration-specific basis in
+      order to configure the behaviour based on different targets, build types, etc. Due to
+      this, the default values attempt to provide the most developer-centric experience.
 
-    - Code Injection: the set of macros responsible for providing the code injection capabilities
-      of these code extensions. The section comment explains in detail how the mechanism works so
-      that the user can correct any potential issues without being dependent on a new version of
-      the extension being released.
+    - Code Injection: the mechanism responsible for providing the code injection capabilities
+      of these code extensions. The section comment explains in detail how the mechanism
+      works so that the user can correct any potential issues without being dependent on a
+      new version of the extension being released.
 
-    - Extension Code: all of the code pertaining to the implementation of these code extensions
-      that does not fall into one of the other regions.
+    - Extension Code: all of the code pertaining to the implementation of these code
+      extensions that does not fall into one of the other regions.
 
     - Validation: a collection of self-contained, automated tests that assure the user of the
       correctness of their configuration.
@@ -115,7 +115,39 @@
 
 #endregion Configuration
 #region Code Injection
-// TODO: Section comment
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                               //
+// GameMaker allows us to define macros, which provide us with text replacement functionalities  //
+// prior to the final compilation of the game. We leverage this to define macros with the names  //
+// of the built-in functions we want to replace. This effectively means that whenever GameMaker  //
+// encounters the built-in function in the code it will replace it according to our macro.       //
+//                                                                                               //
+// This mechanism allows us to seemlessly replace the built-in function by our custom code,      //
+// however we still need to be able to execute the built-in functions. Unfortunately, since we   //
+// defined the macros that always replace the built-in functions by our custom ones we cannot    //
+// simply invoke them like we normally would. Luckily, GameMaker uses indexes as an abstraction  //
+// for most things and built-in functions are no exception. Therefore, if we know the index of a //
+// given built-in function we can setup a variable with it and then invoke the built-in function //
+// just as if we were invoking a method/script referenced in a regular variable.                 //
+//                                                                                               //
+// The EndiannessBuiltInOpCodes enum is used for storing the indexes (here mentioned as op       //
+// codes) for each one of the built-in functions we need to replace. There are then a set of     //
+// macros and global variables that allow us to reference the built-in function by using one of  //
+// builtin_* macros as if it were the equivalent built-in function.                              //
+//                                                                                               //
+// Note however that these op codes could change between any GameMaker release (potentially even //
+// between target platforms, although that hasn't been encountered during our tests). This would //
+// lead to (potentially) the wrong built-in functions being referenced. If that happens then it  //
+// is highly likely that a "random" error is thrown whenever a built-in function is accessed. In //
+// order to fix this we just need to update the op codes in the enum, the mechanism for which is //
+// detailed in the comment above the macros redefining the built-in functions below.             //
+//                                                                                               //
+// Therefore, it is highly recommended that the automated validations of these extension         //
+// mechanisms are kept enabled at least during development. This way any divergence between the  //
+// stored op-codes (or even any other behaviour in these extensions) can be caught early on and  //
+// addressed accordingly.                                                                        //
+//                                                                                               //
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///
 /// Enumeration of the different op codes for the replaced built-in functions.
