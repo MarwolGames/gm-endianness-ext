@@ -75,12 +75,6 @@
 /// Configuration option that dictates whether the op codes for the built-in functions should be
 /// validated or not (i.e validate that the EndiannessBuiltInOpCodes enum has the correct values).
 ///
-/// Note that this configuration option is only relevant if the built-in functions are not being
-/// replaced. This comes from the fact that we cannot retrieve the correct op code for the built-in
-/// functions when they are replaced, so even if we could validate the correctness of the
-/// configured op codes indirectly (e.g. by running the functions and validating their side
-/// effects) we still wouldn't be able to tell the user what the correct op codes were.
-///
 /// By default this is enabled so that potential errors in the extension code are reported as soon
 /// as possible.
 ///
@@ -103,37 +97,191 @@ enum EndiannessBuiltInOpCodes {
   BufferWrite = 1489,
 }
 
-// TODO: code injection
+/*
+  Comment out these macros and run the following code to get the updated op codes:
+
+    show_debug_message(@"
+      enum EndiannessBuiltInOpCodes {
+        BufferFill  = " + string(buffer_fill)  + @",
+        BufferPeek  = " + string(buffer_peek)  + @",
+        BufferPoke  = " + string(buffer_poke)  + @",
+        BufferRead  = " + string(buffer_read)  + @",
+        BufferWrite = " + string(buffer_write) + @",
+      }
+    ");
+*/
+#macro buffer_fill  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_fill_ext  : builtin_buffer_fill)
+#macro buffer_peek  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_peek_ext  : builtin_buffer_peek)
+#macro buffer_poke  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_poke_ext  : builtin_buffer_poke)
+#macro buffer_read  (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_read_ext  : builtin_buffer_read)
+#macro buffer_write (ENDIANNESS_CONFIG_REPLACE_BUILTINS ? buffer_write_ext : builtin_buffer_write)
+
+///
+/// Executes the built-in buffer_fill function, regardless of whether the built-in function has
+/// been replaced by the extended version or not.
+///
+/// Note: this needs to be stored in a variable. If GameMaker encounters a variable with an integer
+///       that is being used as a function invocation then it will coerce the integer to a function
+///       (interpreting the integer as the function/script/method index). However, if we tried to
+///       invoke the integer as a function directly then we'd get a runtime exception as the
+///       integer would not go through the coercion process. Therefore we use a globalvar
+///       declaration instead of a #macro declaration since both create the same identifier but the
+///       former allows us to actually invoke the built-in function.
+///
+/// @function builtin_buffer_fill
+/// @param {Buffer} buffer
+///   The index of the buffer to fill.
+/// @param {Integer} offset
+///   The data offset value (in bytes).
+/// @param {Integer} type
+///   The type of data that is to be written to the buffer (note: cannot be one of the extended
+///   types).
+/// @param {*} value
+///   The data to write.
+/// @param {Integer} size
+///   The size of the buffer (in bytes) that you wish to fill.
+///
+globalvar builtin_buffer_fill;
+builtin_buffer_fill = EndiannessBuiltInOpCodes.BufferFill;
+
+///
+/// Executes the built-in buffer_peek function, regardless of whether the built-in function has
+/// been replaced by the extended version or not.
+///
+/// Note: this needs to be stored in a variable. If GameMaker encounters a variable with an integer
+///       that is being used as a function invocation then it will coerce the integer to a function
+///       (interpreting the integer as the function/script/method index). However, if we tried to
+///       invoke the integer as a function directly then we'd get a runtime exception as the
+///       integer would not go through the coercion process. Therefore we use a globalvar
+///       declaration instead of a #macro declaration since both create the same identifier but the
+///       former allows us to actually invoke the built-in function.
+///
+/// @function builtin_buffer_peek
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} offset
+///   The offset position (in bytes) within the buffer to read the given data from.
+/// @param {Integer} type
+///   The type of data that is to be read from the buffer (note: cannot be one of the extended
+///   types).
+/// @returns {*}
+///   The value read.
+///
+globalvar builtin_buffer_peek;
+builtin_buffer_peek = EndiannessBuiltInOpCodes.BufferPeek;
+
+///
+/// Executes the built-in buffer_poke function, regardless of whether the built-in function has
+/// been replaced by the extended version or not.
+///
+/// Note: this needs to be stored in a variable. If GameMaker encounters a variable with an integer
+///       that is being used as a function invocation then it will coerce the integer to a function
+///       (interpreting the integer as the function/script/method index). However, if we tried to
+///       invoke the integer as a function directly then we'd get a runtime exception as the
+///       integer would not go through the coercion process. Therefore we use a globalvar
+///       declaration instead of a #macro declaration since both create the same identifier but the
+///       former allows us to actually invoke the built-in function.
+///
+/// @function builtin_buffer_poke
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} offset
+///   The offset position (in bytes) within the buffer to write the given data to.
+/// @param {Integer} type
+///   The type of data that is to be written to the buffer (note: cannot be one of the extended
+///   types).
+/// @param {*} value
+///   The data to add to the buffer, in accordance with the type specified.
+///
+globalvar builtin_buffer_poke;
+builtin_buffer_poke = EndiannessBuiltInOpCodes.BufferPoke;
+
+///
+/// Executes the built-in buffer_read function, regardless of whether the built-in function has
+/// been replaced by the extended version or not.
+///
+/// Note: this needs to be stored in a variable. If GameMaker encounters a variable with an integer
+///       that is being used as a function invocation then it will coerce the integer to a function
+///       (interpreting the integer as the function/script/method index). However, if we tried to
+///       invoke the integer as a function directly then we'd get a runtime exception as the
+///       integer would not go through the coercion process. Therefore we use a globalvar
+///       declaration instead of a #macro declaration since both create the same identifier but the
+///       former allows us to actually invoke the built-in function.
+///
+/// @function builtin_buffer_read
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} type
+///   The type of data that is to be read from the buffer (note: cannot be one of the extended
+///   types).
+/// @returns {*}
+///   The value read.
+///
+globalvar builtin_buffer_read;
+builtin_buffer_read = EndiannessBuiltInOpCodes.BufferRead;
+
+///
+/// Executes the built-in buffer_write function, regardless of whether the built-in function has
+/// been replaced by the extended version or not.
+///
+/// Note: this needs to be stored in a variable. If GameMaker encounters a variable with an integer
+///       that is being used as a function invocation then it will coerce the integer to a function
+///       (interpreting the integer as the function/script/method index). However, if we tried to
+///       invoke the integer as a function directly then we'd get a runtime exception as the
+///       integer would not go through the coercion process. Therefore we use a globalvar
+///       declaration instead of a #macro declaration since both create the same identifier but the
+///       former allows us to actually invoke the built-in function.
+///
+/// @function builtin_buffer_write
+/// @param {Buffer} buffer
+///   The index of the buffer to use.
+/// @param {Integer} type
+///   The type of data that is to be written to the buffer (note: cannot be one of the extended
+///   types).
+/// @param {*} value
+///   The data to write.
+///
+globalvar builtin_buffer_write;
+builtin_buffer_write = EndiannessBuiltInOpCodes.BufferWrite;
+
 #endregion Code Injection
 #region Extension Code
 // TODO: To be implemented
 #endregion Extension Code
 #region Validation
 
-if (!ENDIANNESS_CONFIG_REPLACE_BUILTINS) {
-
-  if (ENDIANNESS_CONFIG_VALIDATE_OPCODES) {
-    var opcodes_are_correct = true;
-    opcodes_are_correct &= buffer_fill  == EndiannessBuiltInOpCodes.BufferFill;
-    opcodes_are_correct &= buffer_peek  == EndiannessBuiltInOpCodes.BufferPeek;
-    opcodes_are_correct &= buffer_poke  == EndiannessBuiltInOpCodes.BufferPoke;
-    opcodes_are_correct &= buffer_read  == EndiannessBuiltInOpCodes.BufferRead;
-    opcodes_are_correct &= buffer_write == EndiannessBuiltInOpCodes.BufferWrite;
-    if (!opcodes_are_correct) {
-      var opcodes = @"
-        enum EndiannessBuiltInOpCodes {
-          BufferFill  = " + string(buffer_fill)  + @",
-          BufferPeek  = " + string(buffer_peek)  + @",
-          BufferPoke  = " + string(buffer_poke)  + @",
-          BufferRead  = " + string(buffer_read)  + @",
-          BufferWrite = " + string(buffer_write) + @",
-        }
-      ";
-      throw "One of more op codes in EndiannessBuiltInOpCodes are incorrect.\n"
-          + "Please update the enum with the following:\n" + opcodes;
+if (ENDIANNESS_CONFIG_VALIDATE_OPCODES) {
+  var buffer = buffer_create(4, buffer_fixed, 1);
+  try {
+    for (var i = 1; i <= 4; i++) {
+      if (builtin_buffer_write(buffer, buffer_u8, i) < -1)
+        throw "buffer_write - failed to write a byte to the buffer (byte " + string(i) + ")";
     }
-  }
 
+    buffer_seek(buffer, buffer_seek_start, 0);
+    for (var i = 1; i <= 4; i++) {
+      var byte = builtin_buffer_read(buffer, buffer_u8);
+      if (byte != i)
+        throw "buffer_read - failed to read a byte from the buffer (got " + string(byte)
+            + " but wanted " + string(i) + ")";
+    }
+
+    builtin_buffer_poke(buffer, 1, buffer_u8, 10);
+    if (builtin_buffer_peek(buffer, 1, buffer_u8) != 10)
+      throw "buffer_peek/poke - failed to write & read byte 10 at offset 1 in the buffer";
+
+    builtin_buffer_fill(buffer, 0, buffer_u8, 111, 4);
+    buffer_seek(buffer, buffer_seek_start, 0);
+    repeat (4) {
+      if (builtin_buffer_read(buffer, buffer_u8) != 111)
+        throw "buffer_fill - failed to fill buffer with byte 111";
+    }
+  } catch (error) {
+    throw "At least one op code in EndiannessBuiltInOpCodes is incorrect:\n\n" + string(error);
+  } finally {
+    buffer_delete(buffer);
+  }
+  show_debug_message("EndiannessBuiltInOpCodes: opcodes are correct");
 }
 
 #endregion Validation
