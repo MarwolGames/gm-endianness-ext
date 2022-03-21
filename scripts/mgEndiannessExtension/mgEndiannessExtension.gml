@@ -41,6 +41,14 @@
 
   For any improvements, suggestions or bug reports please reach out to us.
 
+***************************************************************************************************
+
+  Version: 0.1.0
+  Last Modified: 21 March 2022
+
+    v0.1.0:
+      - Initial implementation of the endianness extensions.
+
 **************************************************************************************************/
 
 #region Configuration
